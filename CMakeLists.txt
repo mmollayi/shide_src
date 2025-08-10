@@ -27,7 +27,7 @@ add_subdirectory(external/date)
 
 target_link_libraries(shide INTERFACE date::date date::date-tz)
 
-add_executable(main src/main.cpp)
+add_executable(main src/main.cpp "include/shide/date.h" "include/shide/macros.h")
 target_link_libraries(main PRIVATE shide)
 #add_dependencies(main build_tz_data)
 

@@ -6,6 +6,7 @@
 #include "shide/sh_year_month_day.h"
 #include "shide/tzdb.h"
 #include "shide/utils.h"
+#include "shide/macros.h"
 
 using std::chrono::hours;
 using std::chrono::seconds;
@@ -77,12 +78,12 @@ double jdatetime_from_local_seconds(const date::local_seconds& ls, const date::t
             s = ls.time_since_epoch() - info.second.offset;
             break;
         case choose::NA:
-            return NAN;
+            return NA_REAL;
         }
     }
     else
     {
-        return NAN;
+        return NA_REAL;
     }
 
     return static_cast<double>(s.count());
@@ -105,7 +106,7 @@ double make_jdatetime(const sh_fields& fds, const date::time_zone* tz,
 {
     auto ls = make_local_seconds(fds);
     if (!ls.has_value())
-        return NAN;
+        return NA_REAL;
 
     return jdatetime_from_local_seconds(*ls, tz, info, c);
 }
@@ -115,7 +116,7 @@ double make_jdatetime(const sh_fields& fds, const date::time_zone* tz,
 {
     auto ls = make_local_seconds(fds);
     if (!ls.has_value())
-        return NAN;
+        return NA_REAL;
 
     return jdatetime_from_local_seconds(*ls, tz, info, choose{}, &ss_ref);
 }
@@ -125,7 +126,7 @@ double make_jdatetime(const sh_fields& fds, const std::string& tz_name,
 {
     const date::time_zone* tz{};
     if (!tzdb::locate_zone(tz_name, tz))
-        return NAN;
+        return NA_REAL;
 
     date::local_info info;
     return make_jdatetime(fds, tz, info, c);
@@ -136,7 +137,7 @@ double make_jdatetime(const sh_fields& fds, const std::string& tz_name,
 {
     const date::time_zone* tz{};
     if (!tzdb::locate_zone(tz_name, tz))
-        return NAN;
+        return NA_REAL;
 
     date::local_info info;
     return make_jdatetime(fds, tz, info, ss_ref);
@@ -167,7 +168,7 @@ double make_jdate(const sh_year_month_day& ymd)
 {
     if (!ymd.ok())
     {
-        return NAN;
+        return NA_REAL;
     }
 
     return jdate_from_local_days(date::local_days(ymd));

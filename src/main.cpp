@@ -20,6 +20,13 @@ int main()
 	auto tp = make_jdatetime(fds, tz, info);
 	auto ld = date::local_days{ ymd }; 
 	std::cout << std::fixed << tp << std::endl;
-	std::cin.get();
+	//std::cin.get();
+	std::string* abbrev{};
+	std::chrono::minutes* offptr{};
+	std::istringstream is(std::string("-1000-01-01"));
+	date::fields<std::chrono::seconds> fds1{};
+	const char* fmt{ "%5Y-%m-%d" };
+	date::from_stream(is, fmt, fds1, abbrev, offptr);
+	auto i = is.fail();
 	return 0;
 }
