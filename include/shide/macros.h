@@ -3,6 +3,6 @@
 
 #include <cmath>
 
-#define NA_REAL std::nan("")
+#define NAN_DOUBLE std::nan("")
 
 #endif
