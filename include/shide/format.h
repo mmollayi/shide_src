@@ -3,29 +3,31 @@
 
 #include "shide/sh_year_month_day.h"
 
-std::ostringstream&
-sh_to_stream(std::ostringstream& os, const char* fmt, const sh_fields& fds)
+inline
+unsigned
+extract_month(std::ostream& os, const sh_fields& fds)
 {
-    //using detail::weekday_names;
-    //using detail::month_names;
-    //using detail::ampm_names;
-    //using detail::save_ostream;
-    //using detail::get_units;
-    //using detail::extract_weekday;
-    //using detail::extract_month;
-    using std::ios;
+    if (!fds.ymd.month().ok())
+    {
+        os.setstate(std::ios::failbit);
+        return 0;
+    }
+    return static_cast<unsigned>(fds.ymd.month());
+}
+
+std::ostream&
+sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds)
+{
     using std::chrono::duration_cast;
     using std::chrono::seconds;
     using std::chrono::minutes;
     using std::chrono::hours;
     using date::detail::save_ostream;
-    date::detail::save_ostream<char> ss(os);
     os.fill(' ');
     os.flags(std::ios::skipws | std::ios::dec);
     os.width(0);
     bool insert_negative = fds.has_tod && fds.tod.to_duration() < seconds::zero();
     const char* command = nullptr;
-    char modified = char{};
     for (; *fmt; ++fmt)
     {
         switch (*fmt)
