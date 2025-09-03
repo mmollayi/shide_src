@@ -3,6 +3,73 @@
 
 #include "shide/sh_year_month_day.h"
 
+static const std::string month_names[]{
+        "Farvardin",
+        "Ordibehesht",
+        "Khordad",
+        "Tir",
+        "Mordad",
+        "Shahrivar",
+        "Mehr",
+        "Aban",
+        "Azar",
+        "Dey",
+        "Bahman",
+        "Esfand",
+        "Far",
+        "Ord",
+        "Kho",
+        "Tir",
+        "Mor",
+        "Sha",
+        "Meh",
+        "Aba",
+        "Aza",
+        "Dey",
+        "Bah",
+        "Esf"
+};
+
+constexpr auto month_names() noexcept
+-> std::pair<const std::string*, const std::string*>
+{
+    return { month_names.data(), month_names.data() + month_names.size() };
+}
+
+inline
+std::pair<const std::string*, const std::string*>
+month_names()
+{
+    static const std::string nm[] =
+    {
+        "Farvardin",
+        "Ordibehesht",
+        "Khordad",
+        "Tir",
+        "Mordad",
+        "Shahrivar",
+        "Mehr",
+        "Aban",
+        "Azar",
+        "Dey",
+        "Bahman",
+        "Esfand",
+        "Far",
+        "Ord",
+        "Kho",
+        "Tir",
+        "Mor",
+        "Sha",
+        "Meh",
+        "Aba",
+        "Aza",
+        "Dey",
+        "Bah",
+        "Esf"
+    };
+    return std::make_pair(nm, nm + sizeof(nm) / sizeof(nm[0]));
+}
+
 inline
 unsigned
 extract_month(std::ostream& os, const sh_fields& fds)
@@ -16,7 +83,8 @@ extract_month(std::ostream& os, const sh_fields& fds)
 }
 
 std::ostream&
-sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds)
+sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
+    const std::pair<const std::string*, const std::string*>& month_names_pair)
 {
     using std::chrono::duration_cast;
     using std::chrono::seconds;
@@ -26,12 +94,24 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds)
     os.fill(' ');
     os.flags(std::ios::skipws | std::ios::dec);
     os.width(0);
+    tm tm{};
     bool insert_negative = fds.has_tod && fds.tod.to_duration() < seconds::zero();
     const char* command = nullptr;
     for (; *fmt; ++fmt)
     {
         switch (*fmt)
         {
+        case 'b':
+        case 'B':
+        case 'h':
+            if (command)
+            {
+                os << month_names().first[tm.tm_mon + 12 * (*fmt != 'B')];
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
         case 'd':
         case 'e':
             if (command)
