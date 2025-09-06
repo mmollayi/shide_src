@@ -3,7 +3,7 @@
 
 #include "shide/sh_year_month_day.h"
 
-static const std::string month_names[]{
+static const std::string default_month_names[]{
         "Farvardin",
         "Ordibehesht",
         "Khordad",
@@ -29,45 +29,29 @@ static const std::string month_names[]{
         "Bah",
         "Esf"
 };
-
-constexpr auto month_names() noexcept
--> std::pair<const std::string*, const std::string*>
-{
-    return { month_names.data(), month_names.data() + month_names.size() };
-}
+static const std::string default_weekday_names[]{
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat"
+};
 
 inline
 std::pair<const std::string*, const std::string*>
-month_names()
+month_names(const std::string nm[]=nullptr)
 {
-    static const std::string nm[] =
-    {
-        "Farvardin",
-        "Ordibehesht",
-        "Khordad",
-        "Tir",
-        "Mordad",
-        "Shahrivar",
-        "Mehr",
-        "Aban",
-        "Azar",
-        "Dey",
-        "Bahman",
-        "Esfand",
-        "Far",
-        "Ord",
-        "Kho",
-        "Tir",
-        "Mor",
-        "Sha",
-        "Meh",
-        "Aba",
-        "Aza",
-        "Dey",
-        "Bah",
-        "Esf"
-    };
-    return std::make_pair(nm, nm + sizeof(nm) / sizeof(nm[0]));
+    return (nm == nullptr) ?
+        std::make_pair(default_month_names, default_month_names + 24) : std::make_pair(nm, nm + 24);
 }
 
 inline
@@ -84,7 +68,8 @@ extract_month(std::ostream& os, const sh_fields& fds)
 
 std::ostream&
 sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
-    const std::pair<const std::string*, const std::string*>& month_names_pair)
+    const std::string month_nms[] = nullptr, const std::string weekday_nms[] = nullptr
+)
 {
     using std::chrono::duration_cast;
     using std::chrono::seconds;
@@ -106,7 +91,8 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
         case 'h':
             if (command)
             {
-                os << month_names().first[tm.tm_mon + 12 * (*fmt != 'B')];
+                tm.tm_mon = static_cast<int>(extract_month(os, fds)) - 1;
+                os << month_names(month_nms).first[tm.tm_mon + 12 * (*fmt != 'B')];
                 command = nullptr;
             }
             else
