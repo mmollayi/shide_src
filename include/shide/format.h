@@ -55,6 +55,14 @@ month_names(const std::string nm[]=nullptr)
 }
 
 inline
+std::pair<const std::string*, const std::string*>
+weekday_names(const std::string nm[] = nullptr)
+{
+    return (nm == nullptr) ?
+        std::make_pair(default_weekday_names, default_weekday_names + 14) : std::make_pair(nm, nm + 14);
+}
+
+inline
 unsigned
 extract_month(std::ostream& os, const sh_fields& fds)
 {
@@ -64,6 +72,32 @@ extract_month(std::ostream& os, const sh_fields& fds)
         return 0;
     }
     return static_cast<unsigned>(fds.ymd.month());
+}
+
+inline
+unsigned
+extract_weekday(std::ostream& os, const sh_fields& fds)
+{
+    if (!fds.ymd.ok() && !fds.wd.ok())
+    {
+        // fds does not contain a valid weekday
+        os.setstate(std::ios::failbit);
+        return 8;
+    }
+    weekday wd;
+    if (fds.ymd.ok())
+    {
+        wd = weekday{ sys_days(fds.ymd) };
+        if (fds.wd.ok() && wd != fds.wd)
+        {
+            // fds.ymd and fds.wd are inconsistent
+            os.setstate(std::ios::failbit);
+            return 8;
+        }
+    }
+    else
+        wd = fds.wd;
+    return static_cast<unsigned>((wd - date::Sunday).count());
 }
 
 std::ostream&
@@ -86,6 +120,20 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
     {
         switch (*fmt)
         {
+        case 'a':
+        case 'A':
+            if (command)
+            {
+                tm.tm_wday = static_cast<int>(extract_weekday(os, fds));
+                if (os.fail())
+                    return os;
+
+                os << weekday_names(weekday_nms).first[tm.tm_wday + 7 * (*fmt == 'a')];
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
         case 'b':
         case 'B':
         case 'h':
