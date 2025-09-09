@@ -187,6 +187,27 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
             else
                 os << *fmt;
             break;
+        case 'H':
+        case 'I':
+            if (command)
+            {
+                if (!fds.has_tod)
+                    os.setstate(std::ios::failbit);
+                if (insert_negative)
+                {
+                    os << '-';
+                    insert_negative = false;
+                }
+                auto hms = fds.tod;
+                auto h = *fmt == char{ 'I' } ? date::make12(hms.hours()) : hms.hours();
+                if (h < hours{ 10 })
+                    os << char{ '0' };
+                os << h.count();
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
         case 'j':
             if (command)
             {
@@ -217,6 +238,24 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
                 if (m < 10)
                     os << char{ '0' };
                 os << m;
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'M':
+            if (command)
+            {
+                if (!fds.has_tod)
+                    os.setstate(std::ios::failbit);
+                if (insert_negative)
+                {
+                    os << '-';
+                    insert_negative = false;
+                }
+                if (fds.tod.minutes() < minutes{ 10 })
+                    os << char{ '0' };
+                os << fds.tod.minutes().count();
                 command = nullptr;
             }
             else
