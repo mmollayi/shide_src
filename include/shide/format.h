@@ -270,10 +270,55 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
             else
                 os << *fmt;
             break;
+        case 'R':
+            if (command)
+            {
+                if (!fds.has_tod)
+                    os.setstate(std::ios::failbit);
+                if (fds.tod.hours() < hours{ 10 })
+                    os << char{ '0' };
+                os << fds.tod.hours().count() << char{ ':' };
+                if (fds.tod.minutes() < minutes{ 10 })
+                    os << char{ '0' };
+                os << fds.tod.minutes().count();
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'S':
+            if (command)
+            {
+                if (!fds.has_tod)
+                    os.setstate(std::ios::failbit);
+                if (insert_negative)
+                {
+                    os << '-';
+                    insert_negative = false;
+                }
+                if (fds.tod.seconds() < seconds{ 10 })
+                    os << char{ '0' };
+                os << fds.tod.seconds().count();
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
         case 't':
             if (command)
             {
                 os << char{ '\t' };
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'T':
+            if (command)
+            {
+                if (!fds.has_tod)
+                    os.setstate(std::ios::failbit);
+                os << fds.tod;
                 command = nullptr;
             }
             else
