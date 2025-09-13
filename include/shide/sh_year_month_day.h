@@ -540,15 +540,18 @@ public:
 private:
 
 	friend
-		std::ostringstream&
-		operator<<(std::ostringstream& os, hour_minute_second const& tod)
+		std::ostream&
+		operator<<(std::ostream& os, hour_minute_second const& tod)
 	{
 		if (tod.h_ < std::chrono::hours{ 10 })
 			os << '0';
 		os << tod.h_.count() << ':';
 		if (tod.m_ < std::chrono::minutes{ 10 })
 			os << '0';
-		os << tod.m_.count() << ':' << tod.s_.count();
+		os << tod.m_.count() << ':';
+		if (tod.s_ < std::chrono::seconds{ 10 })
+			os << '0';
+		os << tod.s_.count();
 		return os;
 	}
 };
