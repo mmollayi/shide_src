@@ -45,6 +45,10 @@ static const std::string default_weekday_names[]{
     "Fri",
     "Sat"
 };
+static const std::string default_ampm_names[]{
+    "AM",
+    "PM"
+};
 
 inline
 std::pair<const std::string*, const std::string*>
@@ -60,6 +64,14 @@ weekday_names(const std::string nm[] = nullptr)
 {
     return (nm == nullptr) ?
         std::make_pair(default_weekday_names, default_weekday_names + 14) : std::make_pair(nm, nm + 14);
+}
+
+inline
+std::pair<const std::string*, const std::string*>
+ampm_names(const std::string nm[] = nullptr)
+{
+    return (nm == nullptr) ?
+        std::make_pair(default_ampm_names, default_ampm_names + 2) : std::make_pair(nm, nm + 2);
 }
 
 inline
@@ -102,8 +114,9 @@ extract_weekday(std::ostream& os, const sh_fields& fds)
 
 std::ostream&
 sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
-    const std::string month_nms[] = nullptr, const std::string weekday_nms[] = nullptr
-)
+    const std::string* abbrev, const std::chrono::seconds* offset_sec,
+    const std::string month_nms[] = nullptr, const std::string weekday_nms[] = nullptr,
+    const std::string ampm_nms[] = nullptr)
 {
     using std::chrono::duration_cast;
     using std::chrono::seconds;
@@ -270,6 +283,29 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
             else
                 os << *fmt;
             break;
+        case 'r':
+            if (command)
+            {
+                if (!fds.has_tod)
+                    os.setstate(std::ios::failbit);
+                auto const& tod = fds.tod;
+                save_ostream<char> _(os);
+                os.fill('0');
+                os.width(2);
+                os << date::make12(tod.hours()).count() << char{ ':' };
+                os.width(2);
+                os << tod.minutes().count() << char{ ':' };
+                os.width(2);
+                os << tod.seconds().count() << char{ ' ' };
+                if (date::is_am(tod.hours()))
+                    os << ampm_names(ampm_nms).first[0];
+                else
+                    os << ampm_names(ampm_nms).first[1];
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
         case 'R':
             if (command)
             {
@@ -324,6 +360,20 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
             else
                 os << *fmt;
             break;
+        case 'y':
+            if (command)
+            {
+                if (!fds.ymd.year().ok())
+                    os.setstate(std::ios::failbit);
+                auto y = static_cast<int>(fds.ymd.year());
+                y = std::abs(y) % 100;
+                if (y < 10)
+                    os << char{ '0' };
+                os << y;
+            }
+            else
+                os << *fmt;
+            break;
         case 'Y':
             if (command)
             {
@@ -333,6 +383,51 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
                 save_ostream<char> _(os);
                 os.imbue(std::locale::classic());
                 os << y;
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'z':
+            if (command)
+            {
+                if (offset_sec == nullptr)
+                {
+                    // Can not format %z with unknown offset
+                    os.setstate(std::ios::failbit);
+                    return os;
+                }
+                auto m = duration_cast<minutes>(*offset_sec);
+                auto neg = m < minutes{ 0 };
+                m = date::abs(m);
+                auto h = duration_cast<hours>(m);
+                m -= h;
+                if (neg)
+                    os << char{ '-' };
+                else
+                    os << char{ '+' };
+                if (h < hours{ 10 })
+                    os << char{ '0' };
+                os << h.count();
+                if (m < minutes{ 10 })
+                    os << char{ '0' };
+                os << m.count();
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'Z':
+            if (command)
+            {
+                if (abbrev == nullptr)
+                {
+                    // Can not format %Z with unknown time_zone
+                    os.setstate(std::ios::failbit);
+                    return os;
+                }
+                for (auto c : *abbrev)
+                    os << c;
                 command = nullptr;
             }
             else
