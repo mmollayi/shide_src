@@ -551,7 +551,7 @@ private:
 		os << tod.m_.count() << ':';
 		if (tod.s_ < std::chrono::seconds{ 10 })
 			os << '0';
-		os << tod.s_.count();
+		os << tod.m_.count() << ':';
 		return os;
 	}
 };
