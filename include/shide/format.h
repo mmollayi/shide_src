@@ -159,6 +159,31 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
             else
                 os << *fmt;
             break;
+        case 'C':
+            if (command)
+            {
+                if (!fds.ymd.year().ok())
+                    os.setstate(std::ios::failbit);
+                auto y = static_cast<int>(fds.ymd.year());
+                save_ostream<char> _(os);
+                os.fill('0');
+                os.flags(std::ios::dec | std::ios::right);
+                if (y >= 0)
+                {
+                    os.width(2);
+                    os << y / 100;
+                }
+                else
+                {
+                    os << char{ '-' };
+                    os.width(2);
+                    os << -(y - 99) / 100;
+                }
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
         case 'd':
         case 'e':
             if (command)
