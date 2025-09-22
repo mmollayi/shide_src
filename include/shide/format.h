@@ -204,6 +204,27 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
             else
                 os << *fmt;
             break;
+        case 'D': 
+            if (command)
+            {
+                if (!fds.ymd.ok())
+                    os.setstate(std::ios::failbit);
+                auto const& ymd = fds.ymd;
+                save_ostream<char> _(os);
+                os.imbue(std::locale::classic());
+                os.fill('0');
+                os.flags(std::ios::dec | std::ios::right);
+                os.width(4);
+                os << static_cast<int>(ymd.year()) << char{ '/' };
+                os.width(2);
+                os << static_cast<unsigned>(ymd.month()) << char{ '/' };
+                os.width(2);
+                os << static_cast<unsigned>(ymd.day());
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
         case 'F':
             if (command)
             {
@@ -303,6 +324,21 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
             if (command)
             {
                 os << char{ '\n' };
+                command = nullptr;
+            }
+            else
+                os << *fmt;
+            break;
+        case 'p':
+            if (command)
+            {
+                if (!fds.has_tod)
+                    os.setstate(std::ios::failbit);
+                auto const& tod = fds.tod;
+                if (date::is_am(tod.hours()))
+                    os << ampm_names(ampm_nms).first[0];
+                else
+                    os << ampm_names(ampm_nms).first[1];
                 command = nullptr;
             }
             else
