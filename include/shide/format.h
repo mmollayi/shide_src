@@ -411,6 +411,7 @@ sh_to_stream(std::ostream& os, const char* fmt, const sh_fields& fds,
                 if (y < 10)
                     os << char{ '0' };
                 os << y;
+                command = nullptr;
             }
             else
                 os << *fmt;
